@@ -26,7 +26,7 @@ import com.example.simplymusicplayer.getSampleTracksForPlaylistSad
 import com.example.simplymusicplayer.getSampleTracksForPlaylistSleeping
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MediaPlayerManager.NowPlayingListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private val playlists = getSamplePlaylists()
@@ -34,15 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nowPlayingTitleTextView: TextView
     private lateinit var nowPlayingArtistTextView: TextView
     private lateinit var nowPlayingCoverImageView: ImageView
-/*    private val yourListener = object : MediaPlayerManager.OnTrackChangedListener {
-        override fun onTrackChanged(track: MusicTrack) {
-            // Обновление данных в вашей нижней панели
-            // Например:
-            nowPlayingTitleTextView.text = track.title
-            nowPlayingArtistTextView.text = track.artist
-            nowPlayingCoverImageView.setImageResource(track.imageResourse ?: 0)
-        }
-    }*/
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.playlist_activity)
@@ -51,6 +43,10 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recyclerView)
         searchView = findViewById(R.id.searchView)
+
+        nowPlayingTitleTextView = findViewById(R.id.nowPlayingTitleTextView)
+        nowPlayingArtistTextView = findViewById(R.id.nowPlayingArtistTextView)
+        nowPlayingCoverImageView = findViewById(R.id.nowPlayingCoverImageView)
 
 
         setupRecyclerView()
@@ -98,8 +94,9 @@ class MainActivity : AppCompatActivity() {
             Playlist("Классика",  R.drawable.playlist_for_classic, tracks = getSampleTracksForPlaylistClassic()),
         )
     }
-    /*override fun onDestroy() {
-        super.onDestroy()
-        mediaPlayerManager.removeOnTrackChangedListener(yourListener)
-    }*/
+    override fun updateNowPlayingInfo(track: MusicTrack) {
+        nowPlayingTitleTextView.text = track.title
+        nowPlayingArtistTextView.text = track.artist
+        // Дополнительные действия, которые могут быть необходимы для обновления интерфейса
+    }
 }
