@@ -45,4 +45,5 @@ class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemC
         // Вызывайте нужные вам методы, например, устанавливайте плейлист в MediaPlayerManager
         mediaPlayerManager.setPlaylistFromAlbum(playlist.name)
     }
+
 }

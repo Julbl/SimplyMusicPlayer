@@ -6,32 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Search View -->
-    <LinearLayout
-        android:id="@+id/searchContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <SearchView
-            android:id="@+id/searchView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:queryHint="Поиск по плейлистам" />
-    </LinearLayout>
-    <include
-        android:id="@+id/now_playing_panel"
-        layout="@layout/now_playing_panel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true" />
 
     <!-- RecyclerView для отображения плейлистов -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/searchContainer"
-        android:layout_above="@id/now_playing_panel"
+
         android:padding="16dp"/>
 
 </RelativeLayout>

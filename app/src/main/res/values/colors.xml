@@ -8,4 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="actionBar">#704D8A</color>
+    <color name="panel">#E3CDF3</color>
 </resources>

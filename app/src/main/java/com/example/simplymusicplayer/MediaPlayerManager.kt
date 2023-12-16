@@ -16,15 +16,15 @@ class MediaPlayerManager private constructor() {
     private var mediaPlayer: MediaPlayer? = null
     private var currentTrack: MusicTrack? = null
     private var currentPlaylist: List<MusicTrack>? = null
-    private var nowPlayingListener: NowPlayingListener? = null
+    //private var nowPlayingListener: NowPlayingListener? = null
     interface OnTrackChangedListener {
         fun onTrackChanged(track: MusicTrack)
         fun onTrackStopped()
     }
 
-    interface NowPlayingListener {
+    /*interface NowPlayingListener {
         fun updateNowPlayingInfo(track: MusicTrack)
-    }
+    }*/
 
     private val trackChangedListeners = mutableListOf<OnTrackChangedListener>()
     fun setPlaylistFromAlbum(album: String) {
@@ -127,13 +127,13 @@ class MediaPlayerManager private constructor() {
     fun getCurrentTrack(): MusicTrack? {
         return currentTrack
     }
-    fun setNowPlayingListener(listener: NowPlayingListener) {
+/*    fun setNowPlayingListener(listener: NowPlayingListener) {
         nowPlayingListener = listener
-    }
+    }*/
     fun updateTrack(track: MusicTrack) {
         this.track = track
         notifyTrackChangedOrStopped(track)
-        nowPlayingListener?.updateNowPlayingInfo(track)
+        //nowPlayingListener?.updateNowPlayingInfo(track)
     }
 
     fun getCurrentMediaPlayer(): MediaPlayer? {

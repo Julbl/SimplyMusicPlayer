@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplaylist.MediaPlayerManager
 import com.example.simplymusicplayer.MusicTrack
@@ -36,6 +37,7 @@ class TrackAdapter(
         return filteredTracks.size
     }
 
+
     inner class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleTextView: TextView = itemView.findViewById(R.id.trackTitleTextView)
         private val artistTextView: TextView = itemView.findViewById(R.id.trackArtistTextView)
@@ -48,5 +50,20 @@ class TrackAdapter(
             albumTextView.text = track.album
             albumImageView.setImageResource(track.imageResourse)
         }
+    }
+
+    class TrackDiffCallback : DiffUtil.ItemCallback<MusicTrack>() {
+        override fun areItemsTheSame(oldItem: MusicTrack, newItem: MusicTrack): Boolean {
+            return oldItem.title == newItem.title
+        }
+
+
+        override fun areContentsTheSame(oldItem: MusicTrack, newItem: MusicTrack): Boolean {
+            return oldItem.artist == newItem.artist
+        }
+    }
+    fun updateData(tracks: List<MusicTrack>) {
+        filteredTracks = tracks
+        notifyDataSetChanged()
     }
 }

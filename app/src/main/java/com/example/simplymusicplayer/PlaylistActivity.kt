@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.ImageButton
+import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -23,7 +24,7 @@ class PlaylistActivity : AppCompatActivity() {
     private lateinit var nextTrackButton : ImageButton
     private lateinit var prevTrackButton : ImageButton
     private lateinit var trackAdapter : TrackAdapter
-
+    private lateinit var originalTracks: List<MusicTrack>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.list_of_tracks)
@@ -125,8 +126,34 @@ class PlaylistActivity : AppCompatActivity() {
             // Если текущий трек равен null, очищаем TextView (или выводим нужный текст)
             nowPlayingInfoTextView.text = "No track playing"
         }
-    }
 
+        val searchView = findViewById<SearchView>(R.id.searchView)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                // Вызывается при отправке формы поиска (например, нажатии клавиши "Enter")
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                // Вызывается при изменении текста в поле поиска
+                // Обработайте newText и выполните поиск
+                performSearch(newText)
+                return true
+            }
+        })
+        originalTracks = playlist.tracks
+
+    }
+    private fun performSearch(query: String?) {
+        // Фильтруем список треков по введенному запросу
+        val filteredTracks = originalTracks.filter { track ->
+            track.title.contains(query.orEmpty(), ignoreCase = true) ||
+                    track.artist.contains(query.orEmpty(), ignoreCase = true)
+        }
+
+        // Обновляем адаптер с отфильтрованным списком треков
+        trackAdapter.updateData(filteredTracks)
+    }
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayerManager.stopTrack()  // Останавливаем трек при уничтожении активности  // Освобождаем ресурсы MediaPlayer
