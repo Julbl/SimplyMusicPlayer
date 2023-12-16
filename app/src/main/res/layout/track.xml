@@ -1,0 +1,53 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <!-- Изображение альбома слева -->
+    <ImageView
+        android:id="@+id/albumImageView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"/>
+
+    <!-- Информация о треке справа -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="16dp">
+
+        <TextView
+            android:id="@+id/trackTitleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Название трека"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+
+        <TextView
+            android:id="@+id/trackArtistTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Исполнитель"
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+
+        <TextView
+            android:id="@+id/trackAlbumTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Альбом"
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+    </LinearLayout>
+</LinearLayout>

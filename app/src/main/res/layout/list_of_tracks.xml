@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- playlist_item.xml -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.musicplaylist.PlaylistActivity">
+
+    <!-- Название альбома -->
+
+    <!-- Поисковая строка -->
+    <SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Поиск по названию или исполнителю"/>
+
+    <!-- Список треков в виде RecyclerView, который занимает всё оставшееся пространство -->
+    <TextView
+        android:id="@+id/albumTitleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:text="Название альбома"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+    <!-- Нижняя панель с отображением текущего трека -->
+    <LinearLayout
+        android:id="@+id/controlPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Кнопка предыдущего трека -->
+        <ImageButton
+            android:id="@+id/prevTrackButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- Пространство между кнопками -->
+        <Space
+            android:layout_width="16dp"
+            android:layout_height="match_parent" />
+
+        <!-- Кнопка воспроизведения/паузы -->
+        <ImageButton
+            android:id="@+id/playPauseButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp" />
+
+        <!-- Пространство между кнопками -->
+        <Space
+            android:layout_width="16dp"
+            android:layout_height="match_parent" />
+
+        <!-- Кнопка следующего трека -->
+        <ImageButton
+            android:id="@+id/nextTrackButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- TextView для отображения текущего трека и артиста -->
+    <TextView
+        android:id="@+id/nowPlayingInfoTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/controlPanel"
+        android:gravity="center"
+        android:text="Now Playing Title - Artist" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewTracks"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_above="@id/nowPlayingInfoTextView"
+        android:layout_weight="1">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+</LinearLayout>
