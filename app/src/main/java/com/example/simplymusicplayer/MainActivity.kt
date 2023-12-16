@@ -32,6 +32,7 @@ import com.example.simplymusicplayer.getSampleTracksForPlaylistGoodMood
 import com.example.simplymusicplayer.getSampleTracksForPlaylistSad
 import com.example.simplymusicplayer.getSampleTracksForPlaylistSleeping
 import com.google.android.material.snackbar.Snackbar
+import androidx.recyclerview.widget.ListAdapter
 
 
 class MainActivity : AppCompatActivity() {
@@ -60,7 +61,17 @@ class MainActivity : AppCompatActivity() {
             else -> return super.onOptionsItemSelected(item)
         }
     }
+    private fun addPlaylist(playlist: Playlist) {
+        playlists.add(playlist)
+        updatePlaylistUI()
+        Log.i("MainActivity", "Added new playlist: ${playlist.name}")
+    }
 
+    private fun updatePlaylistUI() {
+        val adapter = recyclerView.adapter as PlaylistAdapter
+        adapter.notifyDataSetChanged()
+        Log.i("MainActivity", "Updated playlist UI")
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.playlist_activity)
@@ -112,8 +123,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Замените этот код на ваш фактический метод получения данных о плейлистах
-    private fun getSamplePlaylists(): List<Playlist> {
-        return listOf(
+    private fun getSamplePlaylists(): MutableList<Playlist> {
+        val samplePlaylists = mutableListOf<Playlist>(
             Playlist(
                 "Мелодии для сна",
                 R.drawable.playlist_for_sleeping,
@@ -135,6 +146,8 @@ class MainActivity : AppCompatActivity() {
                 tracks = getSampleTracksForPlaylistClassic()
             ),
         )
+        Log.i("MainActivity", "Created sample playlists")
+        return samplePlaylists
     }
     /*override fun updateNowPlayingInfo(track: MusicTrack) {
         nowPlayingTitleTextView.text = track.title
@@ -165,12 +178,41 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun addPlaylist(playlist: Playlist) {
-        val updatedList = playlists.toMutableList()
-        updatedList.add(playlist)
-        playlists = updatedList
+//    private fun addPlaylist(playlist: Playlist) {
+//        val oldList = ArrayList(playlists)
+//        oldList.add(playlist)
+//        val newList = ArrayList(playlists)
+//
+//        val diffCallback = PlaylistDiffCallback(oldList, newList)
+//        val diffResult = DiffUtil.calculateDiff(diffCallback)
+//
+//        // Обновление вашего RecyclerView
+//        recyclerView.adapter?.let {
+//            it.submitList(newList)
+//            diffResult.dispatchUpdatesTo(it)
+//        }
+//    }
 
-        // Уведомьте адаптер о вставке нового элемента
-        adapter.notifyItemInserted(updatedList.size - 1)
+}
+class PlaylistDiffCallback(
+    private val oldList: List<Playlist>,
+    private val newList: List<Playlist>
+) : DiffUtil.Callback() {
+
+    override fun getOldListSize(): Int {
+        return oldList.size
+    }
+
+    override fun getNewListSize(): Int {
+        return newList.size
+    }
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition].name == newList[newItemPosition].name
+    }
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        // В данном случае считаем, что плейлисты считаются одинаковыми, если их названия одинаковы
+        return oldList[oldItemPosition] == newList[newItemPosition]
     }
 }

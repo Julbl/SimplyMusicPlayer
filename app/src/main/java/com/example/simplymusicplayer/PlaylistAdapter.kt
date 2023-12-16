@@ -7,11 +7,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplaylist.MediaPlayerManager
 import com.example.musicplaylist.Playlist
 import com.example.simplymusicplayer.R
+import androidx.recyclerview.widget.ListAdapter
 
-class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemClick: (Playlist) -> Unit) :
+class PlaylistAdapter(
+    private val playlists: List<Playlist>,
+    private val onItemClick: (Playlist) -> Unit) :
     RecyclerView.Adapter<PlaylistAdapter.ViewHolder>() {
 
     private val mediaPlayerManager = MediaPlayerManager.getInstance()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.playlist_item, parent, false)
         return ViewHolder(view)
@@ -24,7 +28,6 @@ class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemC
             onItemClick(playlist)
             onPlaylistClicked(playlist)
         }
-
     }
 
     override fun getItemCount(): Int {
@@ -42,8 +45,6 @@ class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemC
     }
 
     private fun onPlaylistClicked(playlist: Playlist) {
-        // Вызывайте нужные вам методы, например, устанавливайте плейлист в MediaPlayerManager
         mediaPlayerManager.setPlaylistFromAlbum(playlist.name)
     }
-
 }
