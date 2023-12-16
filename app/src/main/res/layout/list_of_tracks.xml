@@ -1,11 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- playlist_item.xml -->
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.example.musicplaylist.PlaylistActivity">
 
     <!-- Название альбома -->
@@ -13,15 +10,21 @@
     <!-- Поисковая строка -->
     <SearchView
         android:id="@+id/searchView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:queryHint="Поиск по названию или исполнителю"/>
 
     <!-- Список треков в виде RecyclerView, который занимает всё оставшееся пространство -->
     <TextView
         android:id="@+id/albumTitleTextView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/searchView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:paddingStart="16dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
@@ -30,13 +33,20 @@
         android:textSize="18sp" />
 
     <!-- Нижняя панель с отображением текущего трека -->
+
+    <!-- TextView для отображения текущего трека и артиста -->
     <LinearLayout
         android:id="@+id/controlPanel"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:gravity="center"
         android:orientation="horizontal"
-        android:gravity="center">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/albumTitleTextView"
+        app:layout_constraintVertical_bias="1.0">
 
         <!-- Кнопка предыдущего трека -->
         <ImageButton
@@ -50,12 +60,13 @@
             android:layout_height="match_parent" />
 
         <!-- Кнопка воспроизведения/паузы -->
+
+        <!-- Пространство между кнопками -->
         <ImageButton
             android:id="@+id/playPauseButton"
             android:layout_width="64dp"
             android:layout_height="64dp" />
 
-        <!-- Пространство между кнопками -->
         <Space
             android:layout_width="16dp"
             android:layout_height="match_parent" />
@@ -67,22 +78,29 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <!-- TextView для отображения текущего трека и артиста -->
     <TextView
         android:id="@+id/nowPlayingInfoTextView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_above="@id/controlPanel"
         android:gravity="center"
-        android:text="Now Playing Title - Artist" />
+        android:text="Now Playing Title - Artist"
+        app:layout_constraintBottom_toTopOf="@id/controlPanel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewTracks"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_above="@id/nowPlayingInfoTextView"
-        android:layout_weight="1">
+        android:layout_width="412dp"
+        android:layout_height="563dp"
+        app:layout_constraintBottom_toTopOf="@+id/nowPlayingInfoTextView"
+        app:layout_constraintDimensionRatio="2:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/albumTitleTextView"
+        app:layout_constraintVertical_bias="1.0"/>
 
-    </androidx.recyclerview.widget.RecyclerView>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

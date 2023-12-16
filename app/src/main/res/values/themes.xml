@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.SimplyMusicPlayer" parent="android:Theme.Material.Light.DarkActionBar" />
+    <style name="Theme.SimplyMusicPlayer" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:textColorPrimary">@color/purple_200</item>
+        <item name="colorPrimary">@color/actionBar</item>
+        <item name="colorPrimaryDark">@color/purple_200</item>
+        <item name="colorAccent">@color/purple_500</item>
+    </style>
 </resources>

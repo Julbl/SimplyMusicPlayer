@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet.Constraint
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,7 +26,7 @@ import com.example.simplymusicplayer.getSampleTracksForPlaylistSad
 import com.example.simplymusicplayer.getSampleTracksForPlaylistSleeping
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private val playlists = getSamplePlaylists()
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.playlist_activity)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         Log.i("MainActivity", "onCreate: MainActivity created")
 
         recyclerView = findViewById(R.id.recyclerView)
@@ -66,14 +68,11 @@ class MainActivity : ComponentActivity() {
             }
         })
 
+    }
         //mediaPlayerManager.getCurrentTrack()?.let { yourListener.onTrackChanged(it) }
 
         // Добавление слушателя
         //mediaPlayerManager.addOnTrackChangedListener(yourListener))
-
-
-    }
-
 
     private fun setupRecyclerView() {
         val adapter = PlaylistAdapter(playlists) { playlist -> openPlaylistActivity(playlist) }

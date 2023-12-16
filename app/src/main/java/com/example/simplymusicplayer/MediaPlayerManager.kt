@@ -2,15 +2,20 @@ package com.example.musicplaylist
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import com.example.simplymusicplayer.MusicTrack
+import com.example.simplymusicplayer.getSampleTracksForPlaylistClassic
+import com.example.simplymusicplayer.getSampleTracksForPlaylistGoodMood
+import com.example.simplymusicplayer.getSampleTracksForPlaylistSad
+import com.example.simplymusicplayer.getSampleTracksForPlaylistSleeping
 
-class MediaPlayerManager private constructor(){
+class MediaPlayerManager private constructor() {
     private var track: MusicTrack? = null
-    private var listener: ((MusicTrack?) -> Unit)? = null
     private var mediaPlayer: MediaPlayer? = null
     private var currentTrack: MusicTrack? = null
+    private var currentPlaylist: List<MusicTrack>? = null
 
     interface OnTrackChangedListener {
         fun onTrackChanged(track: MusicTrack)
@@ -18,25 +23,17 @@ class MediaPlayerManager private constructor(){
     }
 
     private val trackChangedListeners = mutableListOf<OnTrackChangedListener>()
-
-    fun addOnTrackChangedListener(listener: OnTrackChangedListener) {
-        trackChangedListeners.add(listener)
-    }
-
-    fun removeOnTrackChangedListener(listener: OnTrackChangedListener) {
-        trackChangedListeners.remove(listener)
-    }
-
-    fun notifyTrackChangedOrStopped(track: MusicTrack?) {
-        for (listener in trackChangedListeners) {
-            if (track != null) {
-                listener.onTrackChanged(track)
-            } else {
-                listener.onTrackStopped()
-            }
+    fun setPlaylistFromAlbum(album: String) {
+        // По имени альбома получаем плейлист и устанавливаем его
+        when (album) {
+            "Для хорошего настроения" -> setCurrentPlaylist(getSampleTracksForPlaylistGoodMood())
+            "Музыка для сна" -> setCurrentPlaylist(getSampleTracksForPlaylistSleeping())
+            "Классика" -> setCurrentPlaylist(getSampleTracksForPlaylistClassic())
+            "Когда грустно" -> setCurrentPlaylist(getSampleTracksForPlaylistSad())
+            // Добавьте другие альбомы по мере необходимости
+            else -> setCurrentPlaylist(emptyList()) // Пустой плейлист, если альбом не найден
         }
     }
-
     companion object {
         @Volatile
         private var instance: MediaPlayerManager? = null
@@ -47,35 +44,40 @@ class MediaPlayerManager private constructor(){
             }
     }
 
-    fun playTrack(context: Context, track: MusicTrack) {
-        try {
-            stopTrack()
+    fun setCurrentPlaylist(playlist: List<MusicTrack>) {
+        currentPlaylist = playlist
+    }
 
+    fun playOrPauseTrack(context: Context, track: MusicTrack) {
+        try {
             val audioResId = context.resources.getIdentifier(track.audioFileName, "raw", context.packageName)
 
             if (audioResId != 0) {
-                mediaPlayer = MediaPlayer.create(context, audioResId)
+                if (mediaPlayer == null) {
+                    mediaPlayer = MediaPlayer.create(context, audioResId)
 
-                mediaPlayer?.setOnErrorListener { mp, what, extra ->
-                    Log.e("MediaPlayerManager", "MediaPlayer error: what=$what, extra=$extra")
-                    false
+                    mediaPlayer?.setOnErrorListener { mp, what, extra ->
+                        Log.e("MediaPlayerManager", "MediaPlayer error: what=$what, extra=$extra")
+                        false
+                    }
+
+                    mediaPlayer?.setOnCompletionListener {
+                        stopTrack()
+                        notifyTrackChangedOrStopped(null)
+                    }
                 }
 
-                mediaPlayer?.setOnCompletionListener {
-                    stopTrack()
-                    notifyTrackChangedOrStopped(null)
-                }
-
-                mediaPlayer?.setOnPreparedListener {
-                    // При успешной подготовке начинаем воспроизведение
-                    it.start()
+                if (currentTrack == track && mediaPlayer?.isPlaying == true) {
+                    mediaPlayer?.pause()
+                } else {
+                    mediaPlayer?.reset()
+                    mediaPlayer?.setDataSource(context, Uri.parse("android.resource://${context.packageName}/$audioResId"))
+                    mediaPlayer?.prepare()
+                    mediaPlayer?.start()
                     currentTrack = track
                     updateTrack(track)
                     notifyTrackChangedOrStopped(track)
                 }
-
-                mediaPlayer?.prepareAsync()
-
             } else {
                 Toast.makeText(context, "Resource not found for track: ${track.audioFileName}", Toast.LENGTH_SHORT).show()
             }
@@ -86,19 +88,37 @@ class MediaPlayerManager private constructor(){
     }
 
 
+    fun playNextTrack(context: Context) {
+        val playlist = currentPlaylist
+        if (playlist != null && currentTrack != null) {
+            val currentTrackIndex = playlist.indexOf(currentTrack)
+            val nextTrackIndex = (currentTrackIndex + 1) % playlist.size
+            val nextTrack = playlist[nextTrackIndex]
 
-    fun stopTrack() {
-        // Останавливаем предыдущий трек, если он существует
-        mediaPlayer?.apply {
-            if (isPlaying) {
-                stop()
-            }
-            release()
+            playOrPauseTrack(context, nextTrack)
         }
-        // Сбрасываем текущий трек
-        currentTrack = null
-        mediaPlayer = null
     }
+
+    fun playPrevTrack(context: Context) {
+        val playlist = currentPlaylist
+        if (playlist != null && currentTrack != null) {
+            val currentTrackIndex = playlist.indexOf(currentTrack)
+            val prevTrackIndex = (currentTrackIndex - 1 + playlist.size) % playlist.size
+            val prevTrack = playlist[prevTrackIndex]
+
+            playOrPauseTrack(context, prevTrack)
+        }
+    }
+    fun stopTrack() {
+            mediaPlayer?.apply {
+                if (isPlaying) {
+                    pause()
+                }
+                seekTo(0)
+            }
+            notifyTrackChangedOrStopped(null)
+        }
+
 
     fun getCurrentTrack(): MusicTrack? {
         return currentTrack
@@ -106,7 +126,7 @@ class MediaPlayerManager private constructor(){
 
     fun updateTrack(track: MusicTrack) {
         this.track = track
-        listener?.invoke(track)
+        notifyTrackChangedOrStopped(track)
     }
 
     fun getCurrentMediaPlayer(): MediaPlayer? {
@@ -118,6 +138,27 @@ class MediaPlayerManager private constructor(){
     }
 
 
+    fun getCurrentPlaylist(): List<MusicTrack>? {
+        return currentPlaylist
+    }
+
+    private fun notifyTrackChangedOrStopped(track: MusicTrack?) {
+        for (listener in trackChangedListeners) {
+            if (track != null) {
+                listener.onTrackChanged(track)
+            } else {
+                listener.onTrackStopped()
+            }
+        }
+    }
+
+    fun addOnTrackChangedListener(listener: OnTrackChangedListener) {
+        trackChangedListeners.add(listener)
+    }
+
+    fun removeOnTrackChangedListener(listener: OnTrackChangedListener) {
+        trackChangedListeners.remove(listener)
+    }
 
     // Другие методы управления воспроизведением, если нужно
 }

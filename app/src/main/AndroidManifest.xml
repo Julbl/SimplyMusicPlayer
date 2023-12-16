@@ -26,7 +26,7 @@
         <activity
             android:name="com.example.musicplaylist.PlaylistActivity"
             android:label="Tracks"
-            android:theme="@style/Theme.AppCompat">
+            android:theme="@style/Theme.SimplyMusicPlayer">
         </activity>
 
     </application>

@@ -26,7 +26,7 @@ class TrackAdapter(
         val track = filteredTracks[position]
         holder.bind(track)
         holder.itemView.setOnClickListener {
-            mediaPlayerManager.playTrack(context, track)
+            mediaPlayerManager.playOrPauseTrack(context, track)
             mediaPlayerManager.updateTrack(track)
             onTrackClickListener(track)
         }

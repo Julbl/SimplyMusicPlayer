@@ -4,12 +4,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.musicplaylist.MediaPlayerManager
 import com.example.musicplaylist.Playlist
 import com.example.simplymusicplayer.R
 
 class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemClick: (Playlist) -> Unit) :
     RecyclerView.Adapter<PlaylistAdapter.ViewHolder>() {
 
+    private val mediaPlayerManager = MediaPlayerManager.getInstance()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.playlist_item, parent, false)
         return ViewHolder(view)
@@ -18,7 +20,11 @@ class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemC
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val playlist = playlists[position]
         holder.bind(playlist)
-        holder.itemView.setOnClickListener { onItemClick(playlist) }
+        holder.itemView.setOnClickListener {
+            onItemClick(playlist)
+            onPlaylistClicked(playlist)
+        }
+
     }
 
     override fun getItemCount(): Int {
@@ -33,5 +39,10 @@ class PlaylistAdapter(private val playlists: List<Playlist>, private val onItemC
             playlistImageView.setImageResource(playlist.coverImageUrl)
             playlistTitleTextView.text = playlist.name
         }
+    }
+
+    private fun onPlaylistClicked(playlist: Playlist) {
+        // Вызывайте нужные вам методы, например, устанавливайте плейлист в MediaPlayerManager
+        mediaPlayerManager.setPlaylistFromAlbum(playlist.name)
     }
 }
