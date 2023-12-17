@@ -154,7 +154,6 @@ class MainActivity : AppCompatActivity() {
         nowPlayingArtistTextView.text = track.artist
 
     }*/
-
     private fun showCreatePlaylistDialog() {
         val dialogView = layoutInflater.inflate(R.layout.to_add_playlist, null)
 

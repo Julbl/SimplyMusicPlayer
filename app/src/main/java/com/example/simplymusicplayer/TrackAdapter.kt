@@ -4,7 +4,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplaylist.MediaPlayerManager
 import com.example.simplymusicplayer.MusicTrack
@@ -52,18 +51,9 @@ class TrackAdapter(
         }
     }
 
-    class TrackDiffCallback : DiffUtil.ItemCallback<MusicTrack>() {
-        override fun areItemsTheSame(oldItem: MusicTrack, newItem: MusicTrack): Boolean {
-            return oldItem.title == newItem.title
-        }
-
-
-        override fun areContentsTheSame(oldItem: MusicTrack, newItem: MusicTrack): Boolean {
-            return oldItem.artist == newItem.artist
-        }
-    }
-    fun updateData(tracks: List<MusicTrack>) {
-        filteredTracks = tracks
+    fun updateData(track: MusicTrack) {
+        filteredTracks = mutableListOf(track)
         notifyDataSetChanged()
     }
+
 }

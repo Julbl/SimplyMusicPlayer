@@ -1,21 +1,28 @@
 package com.example.musicplaylist
 
 import TrackAdapter
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.util.Log
+import android.provider.MediaStore
 import android.view.MenuItem
 import android.widget.ImageButton
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+//import com.example.simplymusicplayer.Manifest
 import com.example.simplymusicplayer.MusicTrack
 import com.example.simplymusicplayer.R
-import java.io.Serializable
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.view.View
 
 class PlaylistActivity : AppCompatActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -25,6 +32,7 @@ class PlaylistActivity : AppCompatActivity() {
     private lateinit var prevTrackButton : ImageButton
     private lateinit var trackAdapter : TrackAdapter
     private lateinit var originalTracks: List<MusicTrack>
+    private val REQUEST_PERMISSION_CODE = 123
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.list_of_tracks)
@@ -143,16 +151,68 @@ class PlaylistActivity : AppCompatActivity() {
         })
         originalTracks = playlist.tracks
 
-    }
-    private fun performSearch(query: String?) {
-        // Фильтруем список треков по введенному запросу
-        val filteredTracks = originalTracks.filter { track ->
-            track.title.contains(query.orEmpty(), ignoreCase = true) ||
-                    track.artist.contains(query.orEmpty(), ignoreCase = true)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                REQUEST_PERMISSION_CODE
+            )
+        } else {
+            // Разрешение уже предоставлено
+            // Здесь вы можете вызывать метод для получения списка треков
+            val tracks = getMusicTracks()
         }
 
-        // Обновляем адаптер с отфильтрованным списком треков
-        trackAdapter.updateData(filteredTracks)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Разрешение предоставлено, вызывайте метод для получения списка треков
+                    val tracks = getMusicTracks()
+                    // Ваши дальнейшие действия с полученным списком треков
+                } else {
+                    // Разрешение не предоставлено, предпримите соответствующие действия
+                }
+            }
+            else -> {
+                // Обработка других requestCode, если необходимо
+            }
+        }
+    }
+    private fun getMusicTracks(): List<String> {
+        val tracks = mutableListOf<String>()
+        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Audio.Media.DATA)
+        val cursor = contentResolver.query(uri, projection, null, null, null)
+
+        cursor?.use {
+            val columnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            while (it.moveToNext()) {
+                val path = it.getString(columnIndex)
+                tracks.add(path)
+            }
+        }
+
+        return tracks
+    }
+    private fun performSearch(query: String?): MutableList<MusicTrack> {
+        // Фильтруем список треков по введенному запросу
+        val filteredTracks: MutableList<MusicTrack> = originalTracks.filter { track ->
+            track.title.contains(query.orEmpty(), ignoreCase = true) ||
+                    track.artist.contains(query.orEmpty(), ignoreCase = true)
+        }.toMutableList()
+
+        // Возвращаем отфильтрованный список треков
+        return filteredTracks
     }
     override fun onDestroy() {
         super.onDestroy()
@@ -191,4 +251,63 @@ class PlaylistActivity : AppCompatActivity() {
             nowPlayingInfoTextView.text = "No track playing"
         }
     }
+
+    fun onAddTrackButtonClick(view: View) {
+        openFilePicker()
+    }
+
+    private fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "audio/*" // Фильтруем только аудиофайлы
+        startActivityForResult(intent, REQUEST_PERMISSION_CODE)
+    }
+    private fun updatePlaylistRecyclerView() {
+        // Проверяем, что текущий плейлист не равен null
+        mediaPlayerManager.getCurrentTrack()?.let {
+            // Обновляем данные в адаптере
+            trackAdapter.updateData(it)
+
+            // Оповещаем адаптер о том, что данные были изменены
+            trackAdapter.notifyDataSetChanged()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val currentPlaylist = mediaPlayerManager.getCurrentPlaylist()
+
+        if (requestCode == REQUEST_PERMISSION_CODE && resultCode == Activity.RESULT_OK) {
+            data?.data?.let { uri ->
+                val filePath = getRealPathFromURI(uri)
+
+                if (filePath != null) {
+                    // Создайте новый объект MusicTrack, например, используя дефолтные значения
+                    val defaultImageResource = R.drawable.default_album_cover
+                    val defaultArtist = "Unknown Artist"
+                    val newTrack = MusicTrack("New Track", defaultArtist, "Хор", defaultImageResource, filePath)
+
+                    // Добавьте новый трек в текущий плейлист
+                    currentPlaylist?.add(newTrack)
+
+                    // Обновите ваш RecyclerView с треками в плейлисте
+                    updatePlaylistRecyclerView()
+
+                    Toast.makeText(this, "Выбран файл: $filePath", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Не удалось получить путь к файлу", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    private fun getRealPathFromURI(uri: Uri): String? {
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        val cursor = contentResolver.query(uri, projection, null, null, null)
+
+        return cursor?.use {
+            val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            it.moveToFirst()
+            it.getString(columnIndex)
+        }
+    }
+
 }

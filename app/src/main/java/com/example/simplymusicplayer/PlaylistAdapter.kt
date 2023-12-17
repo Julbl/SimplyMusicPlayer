@@ -8,6 +8,7 @@ import com.example.musicplaylist.MediaPlayerManager
 import com.example.musicplaylist.Playlist
 import com.example.simplymusicplayer.R
 import androidx.recyclerview.widget.ListAdapter
+import com.example.simplymusicplayer.MusicTrack
 
 class PlaylistAdapter(
     private val playlists: List<Playlist>,
@@ -46,5 +47,9 @@ class PlaylistAdapter(
 
     private fun onPlaylistClicked(playlist: Playlist) {
         mediaPlayerManager.setPlaylistFromAlbum(playlist.name)
+        /*// Теперь добавим трек к плейлисту (ваша логика может отличаться)
+        val newTrack = createNewTrack() // Замените это на ваш метод создания нового трека
+        mediaPlayerManager.addTrackToPlaylist(newTrack)*/
     }
+
 }

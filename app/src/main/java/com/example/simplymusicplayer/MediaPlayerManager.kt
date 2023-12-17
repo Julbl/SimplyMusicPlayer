@@ -145,8 +145,8 @@ class MediaPlayerManager private constructor() {
     }
 
 
-    fun getCurrentPlaylist(): List<MusicTrack>? {
-        return currentPlaylist
+    fun getCurrentPlaylist(): MutableList<MusicTrack>? {
+        return currentPlaylist as MutableList<MusicTrack>?
     }
 
     private fun notifyTrackChangedOrStopped(track: MusicTrack?) {
