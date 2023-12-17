@@ -51,8 +51,8 @@ class TrackAdapter(
         }
     }
 
-    fun updateData(track: MusicTrack) {
-        filteredTracks = mutableListOf(track)
+    fun updateData(tracks: List<MusicTrack>) {
+        filteredTracks = tracks.toMutableList()
         notifyDataSetChanged()
     }
 

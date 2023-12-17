@@ -211,6 +211,12 @@ class PlaylistActivity : AppCompatActivity() {
                     track.artist.contains(query.orEmpty(), ignoreCase = true)
         }.toMutableList()
 
+        // Обновляем адаптер с отфильтрованным списком треков
+        trackAdapter.updateData(filteredTracks)
+
+        // Оповещаем адаптер о том, что данные были изменены
+        trackAdapter.notifyDataSetChanged()
+
         // Возвращаем отфильтрованный список треков
         return filteredTracks
     }
@@ -263,9 +269,12 @@ class PlaylistActivity : AppCompatActivity() {
     }
     private fun updatePlaylistRecyclerView() {
         // Проверяем, что текущий плейлист не равен null
-        mediaPlayerManager.getCurrentTrack()?.let {
+        val currentPlaylist = mediaPlayerManager.getCurrentPlaylist()
+
+        // Проверяем, что текущий плейлист не равен null и содержит треки
+        if (currentPlaylist != null && currentPlaylist.isNotEmpty()) {
             // Обновляем данные в адаптере
-            trackAdapter.updateData(it)
+            trackAdapter.updateData(currentPlaylist)
 
             // Оповещаем адаптер о том, что данные были изменены
             trackAdapter.notifyDataSetChanged()
@@ -284,8 +293,8 @@ class PlaylistActivity : AppCompatActivity() {
                     // Создайте новый объект MusicTrack, например, используя дефолтные значения
                     val defaultImageResource = R.drawable.default_album_cover
                     val defaultArtist = "Unknown Artist"
-                    val newTrack = MusicTrack("New Track", defaultArtist, "Хор", defaultImageResource, filePath)
-
+                    //val newTrack = MusicTrack("New Track", defaultArtist, "Когда грустно", defaultImageResource, filePath)
+                    val newTrack = MusicTrack("New Track", defaultArtist, "Когда грустно", defaultImageResource, "downloadfile")
                     // Добавьте новый трек в текущий плейлист
                     currentPlaylist?.add(newTrack)
 
