@@ -1,6 +1,8 @@
 package com.example.musicplaylist
 
 import PlaylistAdapter
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -33,17 +35,14 @@ import com.example.simplymusicplayer.getSampleTracksForPlaylistSad
 import com.example.simplymusicplayer.getSampleTracksForPlaylistSleeping
 import com.google.android.material.snackbar.Snackbar
 import androidx.recyclerview.widget.ListAdapter
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 
 
 class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
-    private lateinit var searchView: SearchView
     private var playlists = getSamplePlaylists()
     private lateinit var adapter: PlaylistAdapter
-    private val mediaPlayerManager = MediaPlayerManager.getInstance()
-    private lateinit var nowPlayingTitleTextView: TextView
-    private lateinit var nowPlayingArtistTextView: TextView
-    private lateinit var nowPlayingCoverImageView: ImageView
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -61,51 +60,28 @@ class MainActivity : AppCompatActivity() {
             else -> return super.onOptionsItemSelected(item)
         }
     }
-    private fun addPlaylist(playlist: Playlist) {
-        playlists.add(playlist)
-        updatePlaylistUI()
-        Log.i("MainActivity", "Added new playlist: ${playlist.name}")
-    }
 
-    private fun updatePlaylistUI() {
-        val adapter = recyclerView.adapter as PlaylistAdapter
-        adapter.notifyDataSetChanged()
-        Log.i("MainActivity", "Updated playlist UI")
-    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.playlist_activity)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        //supportActionBar?.setDisplayHomeAsUpEnabled(true)
         Log.i("MainActivity", "onCreate: MainActivity created")
 
         recyclerView = findViewById(R.id.recyclerView)
-        //searchView = findViewById(R.id.searchView)
+        loadPlaylists()
         adapter = PlaylistAdapter(playlists) { playlist -> openPlaylistActivity(playlist) }
         recyclerView.adapter = adapter
         setupRecyclerView()
-        /* nowPlayingTitleTextView = findViewById(R.id.nowPlayingTitleTextView)
-        nowPlayingArtistTextView = findViewById(R.id.nowPlayingArtistTextView)
-        nowPlayingCoverImageView = findViewById(R.id.nowPlayingCoverImageView)*/
-
-
-        // Handle searchView changes (you may want to filter the playlists here)
-        /* searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                // Handle search submission
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                // Handle search text changes
-                return true
-            }
-        })*/
+        //loadPlaylists()
 
     }
-    //mediaPlayerManager.getCurrentTrack()?.let { yourListener.onTrackChanged(it) }
-
-    // Добавление слушателя
-    //mediaPlayerManager.addOnTrackChangedListener(yourListener))
+    @SuppressLint("NotifyDataSetChanged")
+    private fun addPlaylist(playlist: Playlist) {
+        playlists.add(playlist)
+        adapter.notifyDataSetChanged()
+        savePlaylists(playlists)
+        Log.i("MainActivity", "Added new playlist: ${playlist.name}")
+    }
 
     private fun setupRecyclerView() {
         val adapter = PlaylistAdapter(playlists) { playlist -> openPlaylistActivity(playlist) }
@@ -149,11 +125,26 @@ class MainActivity : AppCompatActivity() {
         Log.i("MainActivity", "Created sample playlists")
         return samplePlaylists
     }
-    /*override fun updateNowPlayingInfo(track: MusicTrack) {
-        nowPlayingTitleTextView.text = track.title
-        nowPlayingArtistTextView.text = track.artist
 
-    }*/
+    private val sharedPreferences by lazy {
+        getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
+    }
+    private fun savePlaylists(playlists: MutableList<Playlist>) {
+        val playlistsJson = Gson().toJson(playlists)
+        sharedPreferences.edit().putString("playlists", playlistsJson).apply()
+    }
+    inline fun <reified T> Gson.fromJson(json: String): T {
+        val type = object : TypeToken<T>() {}.type
+        return this.fromJson(json, type)
+    }
+
+    private fun loadPlaylists(): MutableList<Playlist> {
+        val playlistsJson = sharedPreferences.getString("playlists", null)
+        val loadedPlaylists: MutableList<Playlist> = Gson().fromJson(playlistsJson ?: "[]")
+        playlists.clear()
+        playlists.addAll(loadedPlaylists)
+        return playlists
+    }
     private fun showCreatePlaylistDialog() {
         val dialogView = layoutInflater.inflate(R.layout.to_add_playlist, null)
 
@@ -176,22 +167,6 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
     }
-
-//    private fun addPlaylist(playlist: Playlist) {
-//        val oldList = ArrayList(playlists)
-//        oldList.add(playlist)
-//        val newList = ArrayList(playlists)
-//
-//        val diffCallback = PlaylistDiffCallback(oldList, newList)
-//        val diffResult = DiffUtil.calculateDiff(diffCallback)
-//
-//        // Обновление вашего RecyclerView
-//        recyclerView.adapter?.let {
-//            it.submitList(newList)
-//            diffResult.dispatchUpdatesTo(it)
-//        }
-//    }
-
 }
 class PlaylistDiffCallback(
     private val oldList: List<Playlist>,

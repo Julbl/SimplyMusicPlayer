@@ -54,36 +54,17 @@ class MediaPlayerManager private constructor() {
 
     fun playOrPauseTrack(context: Context, track: MusicTrack) {
         try {
-            val audioResId = context.resources.getIdentifier(track.audioFileName, "raw", context.packageName)
-
-            if (audioResId != 0) {
-                if (mediaPlayer == null) {
-                    mediaPlayer = MediaPlayer.create(context, audioResId)
-
-                    mediaPlayer?.setOnErrorListener { mp, what, extra ->
-                        Log.e("MediaPlayerManager", "MediaPlayer error: what=$what, extra=$extra")
-                        false
-                    }
-
-                    mediaPlayer?.setOnCompletionListener {
-                        stopTrack()
-                        notifyTrackChangedOrStopped(null)
-                    }
-                }
-
-                if (currentTrack == track && mediaPlayer?.isPlaying == true) {
-                    mediaPlayer?.pause()
-                } else {
-                    mediaPlayer?.reset()
-                    mediaPlayer?.setDataSource(context, Uri.parse("android.resource://${context.packageName}/$audioResId"))
-                    mediaPlayer?.prepare()
-                    mediaPlayer?.start()
-                    currentTrack = track
-                    updateTrack(track)
-                    notifyTrackChangedOrStopped(track)
-                }
+            if (track.audioFileName.startsWith("/")) {
+                // Если audioFileName начинается с "/", это путь к файлу
+                playFile(track.audioFileName)
             } else {
-                Toast.makeText(context, "Resource not found for track: ${track.audioFileName}", Toast.LENGTH_SHORT).show()
+                // Иначе это идентификатор ресурса
+                val audioResId = context.resources.getIdentifier(track.audioFileName, "raw", context.packageName)
+                if (audioResId != 0) {
+                    playResource(context, audioResId)
+                } else {
+                    Toast.makeText(context, "Resource not found for track: ${track.audioFileName}", Toast.LENGTH_SHORT).show()
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -91,6 +72,59 @@ class MediaPlayerManager private constructor() {
         }
     }
 
+    private fun playFile(filePath: String) {
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer().apply {
+                setOnErrorListener { _, what, extra ->
+                    Log.e("MediaPlayerManager", "MediaPlayer error: what=$what, extra=$extra")
+                    false
+                }
+                setOnCompletionListener {
+                    stopTrack()
+                    notifyTrackChangedOrStopped(null)
+                }
+            }
+        }
+
+        if (currentTrack?.audioFileName == filePath && mediaPlayer?.isPlaying == true) {
+            mediaPlayer?.pause()
+        } else {
+            mediaPlayer?.reset()
+            mediaPlayer?.setDataSource(filePath)
+            mediaPlayer?.prepare()
+            mediaPlayer?.start()
+            currentTrack = track
+            track?.let { updateTrack(it) }
+            notifyTrackChangedOrStopped(track)
+        }
+    }
+
+    private fun playResource(context: Context, audioResId: Int) {
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer.create(context, audioResId).apply {
+                setOnErrorListener { _, what, extra ->
+                    Log.e("MediaPlayerManager", "MediaPlayer error: what=$what, extra=$extra")
+                    false
+                }
+                setOnCompletionListener {
+                    stopTrack()
+                    notifyTrackChangedOrStopped(null)
+                }
+            }
+        }
+
+        if (currentTrack?.audioFileName == track?.audioFileName && mediaPlayer?.isPlaying == true) {
+            mediaPlayer?.pause()
+        } else {
+            mediaPlayer?.reset()
+            mediaPlayer?.setDataSource(context, Uri.parse("android.resource://${context.packageName}/$audioResId"))
+            mediaPlayer?.prepare()
+            mediaPlayer?.start()
+            currentTrack = track
+            track?.let { updateTrack(it) }
+            notifyTrackChangedOrStopped(track)
+        }
+    }
 
     fun playNextTrack(context: Context) {
         val playlist = currentPlaylist
@@ -114,14 +148,14 @@ class MediaPlayerManager private constructor() {
         }
     }
     fun stopTrack() {
-            mediaPlayer?.apply {
-                if (isPlaying) {
-                    pause()
-                }
-                seekTo(0)
+        mediaPlayer?.apply {
+            if (isPlaying) {
+                pause()
             }
-            notifyTrackChangedOrStopped(null)
+            seekTo(0)
         }
+        notifyTrackChangedOrStopped(null)
+    }
 
 
     fun getCurrentTrack(): MusicTrack? {

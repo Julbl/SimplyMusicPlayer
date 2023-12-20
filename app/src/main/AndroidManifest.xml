@@ -17,7 +17,6 @@
         <activity
             android:name="com.example.musicplaylist.MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.SimplyMusicPlayer"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

@@ -19,10 +19,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.simplymusicplayer.MusicTrack
 import com.example.simplymusicplayer.R
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.View
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 
 class PlaylistActivity : AppCompatActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -30,6 +38,8 @@ class PlaylistActivity : AppCompatActivity() {
     private lateinit var playPauseButton : ImageButton
     private lateinit var nextTrackButton : ImageButton
     private lateinit var prevTrackButton : ImageButton
+    private lateinit var editTextTitle : TextView
+    private lateinit var editTextArtist : TextView
     private lateinit var trackAdapter : TrackAdapter
     private lateinit var originalTracks: List<MusicTrack>
     private val REQUEST_PERMISSION_CODE = 123
@@ -77,7 +87,7 @@ class PlaylistActivity : AppCompatActivity() {
             }
             updatePlayPauseButton()
         }
-
+        loadTrack()
         // Устанавливаем адаптер для RecyclerView
         recyclerViewTracks.adapter = trackAdapter
 
@@ -164,7 +174,20 @@ class PlaylistActivity : AppCompatActivity() {
             // Здесь вы можете вызывать метод для получения списка треков
             val tracks = getMusicTracks()
         }
+        val rootView = findViewById<View>(R.id.rootLayout) // Замените на ID вашего корневого макета
+        rootView.viewTreeObserver.addOnPreDrawListener {
+            val insets = ViewCompat.getRootWindowInsets(rootView)
+            val isKeyboardOpen = insets?.isVisible(WindowInsetsCompat.Type.systemBars())
 
+            if (isKeyboardOpen == true) {
+                // Клавиатура открыта, выполните действия по необходимости
+                // Например, скройте или подстроите элементы интерфейса
+            } else {
+                // Клавиатура закрыта, выполните действия по необходимости
+            }
+
+            true
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -204,22 +227,7 @@ class PlaylistActivity : AppCompatActivity() {
 
         return tracks
     }
-    private fun performSearch(query: String?): MutableList<MusicTrack> {
-        // Фильтруем список треков по введенному запросу
-        val filteredTracks: MutableList<MusicTrack> = originalTracks.filter { track ->
-            track.title.contains(query.orEmpty(), ignoreCase = true) ||
-                    track.artist.contains(query.orEmpty(), ignoreCase = true)
-        }.toMutableList()
 
-        // Обновляем адаптер с отфильтрованным списком треков
-        trackAdapter.updateData(filteredTracks)
-
-        // Оповещаем адаптер о том, что данные были изменены
-        trackAdapter.notifyDataSetChanged()
-
-        // Возвращаем отфильтрованный список треков
-        return filteredTracks
-    }
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayerManager.stopTrack()  // Останавливаем трек при уничтожении активности  // Освобождаем ресурсы MediaPlayer
@@ -229,6 +237,7 @@ class PlaylistActivity : AppCompatActivity() {
         super.onStop()
         mediaPlayer?.release()
     }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
@@ -281,29 +290,53 @@ class PlaylistActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("MissingInflatedId")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         val currentPlaylist = mediaPlayerManager.getCurrentPlaylist()
+        val currentAlbumName = currentPlaylist?.firstOrNull()?.album ?: "Unknown Album"
 
         if (requestCode == REQUEST_PERMISSION_CODE && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri ->
                 val filePath = getRealPathFromURI(uri)
 
                 if (filePath != null) {
-                    // Создайте новый объект MusicTrack, например, используя дефолтные значения
-                    val defaultImageResource = R.drawable.default_album_cover
-                    val defaultArtist = "Unknown Artist"
-                    //val newTrack = MusicTrack("New Track", defaultArtist, "Когда грустно", defaultImageResource, filePath)
-                    val newTrack = MusicTrack("New Track", defaultArtist, "Когда грустно", defaultImageResource, "downloadfile")
-                    // Добавьте новый трек в текущий плейлист
-                    currentPlaylist?.add(newTrack)
+                    // Создайте диалоговое окно для ввода данных
+                    val builder = AlertDialog.Builder(this)
+                    val inflater = layoutInflater
+                    builder.setTitle("Введите информацию о треке")
+                    val dialogLayout = inflater.inflate(R.layout.dialog_layout, null)
+                    editTextTitle = dialogLayout.findViewById<EditText>(R.id.editTextTitle)
+                    editTextArtist = dialogLayout.findViewById<EditText>(R.id.editTextArtist)
 
-                    // Обновите ваш RecyclerView с треками в плейлисте
-                    updatePlaylistRecyclerView()
+                    builder.setView(dialogLayout)
+                    builder.setPositiveButton("OK") { dialogInterface, i ->
+                        val title = editTextTitle.text.toString()
+                        val artist = editTextArtist.text.toString()
 
-                    Toast.makeText(this, "Выбран файл: $filePath", Toast.LENGTH_SHORT).show()
+                        // Создайте новый объект MusicTrack с введенными данными
+                        val defaultImageResource = R.drawable.default_album_cover
+                        val newTrack = MusicTrack(
+                            title,
+                            artist,
+                            currentAlbumName,
+                            defaultImageResource,
+                            filePath
+                        )
+
+                        // Добавьте новый трек в текущий плейлист
+                        currentPlaylist?.add(newTrack)
+                        saveTracks(newTrack)
+
+                        // Обновите ваш RecyclerView с треками в плейлисте
+                        updatePlaylistRecyclerView()
+
+                        Toast.makeText(this, "Выбран файл: $filePath", Toast.LENGTH_SHORT).show()
+                    }
+                    builder.show()
                 } else {
-                    Toast.makeText(this, "Не удалось получить путь к файлу", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Не удалось получить путь к файлу", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -319,4 +352,52 @@ class PlaylistActivity : AppCompatActivity() {
         }
     }
 
+    private val sharedPreferences by lazy {
+        getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
+    }
+
+
+    private fun performSearch(query: String?): MutableList<MusicTrack> {
+        // Фильтруем список треков по введенному запросу
+        val filteredTracks: MutableList<MusicTrack> = originalTracks.filter { track ->
+            track.title.contains(query.orEmpty(), ignoreCase = true) ||
+                    track.artist.contains(query.orEmpty(), ignoreCase = true)
+        }.toMutableList()
+
+        // Сохраняем обновленный список треков
+        //saveTracks(filteredTracks)
+        trackAdapter.updateData(filteredTracks)
+
+        // Оповещаем адаптер о том, что данные были изменены
+        trackAdapter.notifyDataSetChanged()
+
+        // Возвращаем отфильтрованный список треков
+        return filteredTracks
+    }
+
+    inline fun <reified T> Gson.fromJson(json: String): T {
+        val type = object : TypeToken<T>() {}.type
+        return this.fromJson(json, type)
+    }
+
+    private fun saveTracks(tracks: MusicTrack) {
+        val tracksJson = Gson().toJson(tracks)
+        sharedPreferences.edit().putString("tracks", tracksJson).apply()
+    }
+
+    private fun loadTrack(): MusicTrack? {
+        val trackJson = sharedPreferences.getString("track", null)
+        return if (trackJson != null) {
+            Gson().fromJson(trackJson, MusicTrack::class.java)
+        } else {
+            null
+        }
+    }
+    /*private fun loadTrack() {
+        val tracksJson = sharedPreferences.getString("tracks", null)
+        val loadedTracks: MutableList<MusicTrack> = Gson().fromJson(tracksJson ?: "[]", object : TypeToken<MutableList<MusicTrack>>() {}.type)
+        originalTracks.clear()
+        originalTracks.addAll(loadedTracks)
+    }*/
 }
+
